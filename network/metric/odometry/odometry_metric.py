@@ -48,12 +48,11 @@ class kittiOdomEval():
                 file_name = os.path.splitext(basename)[0]
                 self.eval_seqs.append(str(file_name))
 
-        elif isinstance(config.eva_seqs, (tuple,list)):
+        elif isinstance(config.eva_seqs, (tuple, list)):
             self.eval_seqs = list(config.eva_seqs)
         else:
             seqs = config.eva_seqs.split(',')
             self.eval_seqs = [str(s) for s in seqs]
-
 
     def toCameraCoord(self, pose_mat):
         '''
@@ -67,7 +66,6 @@ class kittiOdomEval():
         R = np.dot(inv_R_C2L, pose_mat)
         rot = np.dot(R, R_C2L)
         return rot
-
 
     def loadPoses(self, file_name, toCameraCoord):
         '''
@@ -345,6 +343,7 @@ class kittiOdomEval():
         pdf.savefig(fig)
         # plt.show()
         plt.close()
+        pdf.close()
 
     def plotPath_3D(self, seq, poses_gt, poses_result, plot_path_dir):
         """
@@ -405,6 +404,7 @@ class kittiOdomEval():
         pdf.savefig(fig)
         # plt.show()
         plt.close()
+        pdf.close()
 
     def plotError_segment(self, seq, avg_segment_errs, plot_error_dir):
         '''
@@ -548,7 +548,7 @@ class kittiOdomEval():
 
         total_err = []
         ave_errs = {}
-        ave_metric ={}
+        ave_metric = {}
         for seq in self.eval_seqs:
             # 创建可视化结果保存路径
             eva_seq_dir = os.path.join(visual_save_root, f'seq_{seq}', f'epoch_{self.epoch}')
@@ -595,14 +595,14 @@ class kittiOdomEval():
             with open(save_txt, 'a+') as tt:
                 tt.write('epoch is: {:d} \n'.format(self.epoch))
                 tt.write('Average sequence translational RMSE(%): {0:.4f}\n'.format(ave_t_err * 100))
-                tt.write('Average sequence rotational error(deg/m): {0:.4f} \n'.format(ave_r_err / np.pi * 180))
+                tt.write('Average sequence rotational error(deg/100m): {0:.4f} \n'.format(100 * ave_r_err / np.pi * 180))
 
-            print("Average sequence rotational error (deg/m): {0:.4f}\n".format(ave_r_err / np.pi * 180))
+            print("Average sequence rotational error (deg/100m): {0:.4f}\n".format(100 * ave_r_err / np.pi * 180))
             with open(eva_seq_dir + '/%s_stats.txt' % seq, 'w') as f:
                 f.writelines('Average sequence translation RMSE (%):    {0:.4f}\n'.format(ave_t_err * 100))
-                f.writelines('Average sequence rotation error (deg/m):  {0:.4f}'.format(ave_r_err / np.pi * 180))
+                f.writelines('Average sequence rotation error (deg/100m):  {0:.4f}'.format(100 * ave_r_err / np.pi * 180))
             ave_errs[seq] = [ave_t_err, ave_r_err]
-            ave_metric[seq] = {'rotate': ave_r_err / np.pi * 180, 'trans': ave_t_err * 100}
+            ave_metric[seq] = {'rotate': 100 * ave_r_err / np.pi * 180, 'trans': ave_t_err * 100}
 
             self.plot_rpy(seq, poses_gt, poses_result, eva_seq_dir)
             self.plot_xyz(seq, poses_gt, poses_result, eva_seq_dir)
@@ -613,8 +613,6 @@ class kittiOdomEval():
             plt.close('all')
 
         return ave_metric
-
-
 
 
 if __name__ == '__main__':
@@ -631,5 +629,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pose_eval = kittiOdomEval(args)
     pose_eval.eval(toCameraCoord=args.toCameraCoord)  # set the value according to the predicted results
-
-
